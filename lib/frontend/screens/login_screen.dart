@@ -1,8 +1,8 @@
 // lib/screens/login_screen.dart
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../backend/models/supabase_flutter.dart';
 import '../widgets/gradient_background.dart';
+import 'package:parkeasy_app/backend/services/auth_service.dart';
+
 
 
 class LoginScreen extends StatefulWidget {
@@ -16,40 +16,27 @@ class _LoginScreenState extends State<LoginScreen> {
   final passCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  Future<void> doLogin() async {
-if (!_formKey.currentState!.validate()) return;
+  final authService = AuthService();
 
-  try {
-    final response = await supabase.auth.signInWithPassword(
-      email: emailCtrl.text.trim(),
-      password: passCtrl.text.trim(),
+
+  Future<void> doLogin() async {
+     if (!_formKey.currentState!.validate()) return;
+
+    final error = await authService.loginUser(
+      correo: emailCtrl.text.trim(),
+      contrasena: passCtrl.text.trim(),
     );
 
-    final session = response.session;
-
-    if (session != null) {
-      final jwt = session.accessToken;
-      print('✅ JWT: $jwt'); // Aquí tienes tu token JWT de Supabase
-
+    if (error == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inicio de sesión exitoso')),
+        const SnackBar(content: Text('Inicio de sesión exitoso ✅')),
       );
-
       Navigator.pushReplacementNamed(context, '/home');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Credenciales inválidas')),
+        SnackBar(content: Text('Error: $error')),
       );
     }
-  } on AuthException catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: ${e.message}')),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error inesperado: $e')),
-    );
-  }
   }
 
   @override

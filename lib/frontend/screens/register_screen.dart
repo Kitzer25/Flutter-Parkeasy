@@ -1,8 +1,7 @@
 // lib/screens/register_screen.dart
 import 'package:flutter/material.dart';
-import 'package:parkeasy_app/backend/models/supabase_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/gradient_background.dart';
+import 'package:parkeasy_app/backend/services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -26,49 +25,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email.endsWith('@tecsup.edu.pe');
   }
 
-void submit() async {
+  final authService = AuthService();
+
+  void submit() async {
   if (!_formKey.currentState!.validate()) return;
 
-  // Original
-  /*try {
-    final response = await supabase.auth.signUp(
-      email: emailCtrl.text.trim(),
-      password: passCtrl.text.trim(),
-      data: {
-        'nombre': nameCtrl.text.trim(),
-        'dni': dniCtrl.text.trim(),
-        'tipo_usuario': tipoCtrl.text.trim(),
-        'placa': placaCtrl.text.trim(),
-      },
-    );*/
+  final error = await authService.registerUser(
+    nombre: nameCtrl.text.trim(),
+    dni: dniCtrl.text.trim(),
+    correo: emailCtrl.text.trim(),
+    tipoUsuario: tipoCtrl.text.trim(),
+    placa: placaCtrl.text.trim(),
+    contrasena: passCtrl.text.trim(),
+  );
 
-  //Testing
-  try {
-    final response = await supabase.auth.signInWithPassword(
-      email: emailCtrl.text.trim(),
-      password: passCtrl.text.trim(),
-    );
-
-    final user = response.user;
-
-    if (user != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registro exitoso. Verifique su correo.')),
-      );
-
-      Navigator.pushReplacementNamed(context, '/login');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al registrar usuario')),
-      );
-    }
-  } on AuthException catch (e) {
+  if (error == null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: ${e.message}')),
+      const SnackBar(content: Text('✅ Registro exitoso. Verifique su correo.')),
     );
-  } catch (e) {
+    Navigator.pushReplacementNamed(context, '/login');
+  } else {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error inesperado: $e')),
+      SnackBar(content: Text('❌ Error: $error')),
     );
   }
 }
